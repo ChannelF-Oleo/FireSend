@@ -1,36 +1,198 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔥 FireSend (v2.0)
 
-## Getting Started
+**SaaS PWA para Automatización de Instagram con IA**
 
-First, run the development server:
+FireSend es una plataforma diseñada bajo una arquitectura **Event-Driven Serverless** que permite automatizar conversaciones de Instagram, cualificar leads y sincronizar datos con herramientas externas como Notion. A diferencia de soluciones low-code, esta versión 2.0 corre sobre código nativo para maximizar la escalabilidad y el control.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Arquitectura del Sistema
+
+El sistema no utiliza un servidor activo 24/7. En su lugar, utiliza funciones serverless que reaccionan a eventos, optimizando costos y recursos.
+
+### Componentes Principales
+
+1. 
+**Frontend (PWA):** Panel de control desarrollado en React (Next.js) para dashboard, inbox manual y configuración.
+
+
+2. 
+**Ingestion Layer (Webhook):** Punto de entrada de alta velocidad encargado únicamente de recibir la petición de Meta y guardarla atómicamente.
+
+
+3. **Processing Layer (Async Workers):** "El Cerebro". Gestiona la cola de mensajes, aplica lógica de *debounce* y conecta con la IA.
+
+
+4. 
+**Integration Module:** Módulos de Node.js a medida para integraciones externas (ej. Notion).
+
+
+
+---
+
+## 🛠 Tech Stack
+
+* **Frontend:** React (Next.js)
+* **Backend:** Node.js, Firebase Functions
+* **Base de Datos:** Firebase Firestore, Firebase Auth
+* 
+**IA:** OpenAI API (GPT-4o-mini) 
+
+
+* 
+**Integraciones:** Meta Graph API, Notion API 
+
+
+
+---
+
+## 🔄 Flujo de Datos ("The Core Loop")
+
+El corazón del sistema maneja la concurrencia y evita respuestas duplicadas a través de tres pasos:
+
+1. **Ingesta (Webhook):**
+* Valida la firma de seguridad (X-Hub-Signature).
+* Guarda el mensaje en Firestore con estado `pending`.
+* Retorna `200 OK` a Meta en < 200ms.
+
+
+
+
+2. **Debounce & Agrupación:**
+* Trigger: `firestore.onCreate`.
+* Espera 3 segundos para agrupar mensajes consecutivos del mismo usuario.
+* Verifica condiciones de carrera y concatena los mensajes en un solo bloque de contexto.
+
+
+
+
+3. **Orquestación de IA:**
+* Input: Historial + Mensaje Agrupado + System Prompt.
+* 
+**Tool Handling:** Si la IA lo requiere, ejecuta funciones locales (ej. `get_prices`) o externas (ej. `save_lead` en Notion).
+
+
+
+
+
+---
+
+## 📂 Modelo de Datos (Firestore Schema)
+
+Diseñado para lecturas rápidas y escalabilidad por "tenant" (cliente del SaaS).
+
+### `tenants/{tenant_id}`
+
+Almacena la configuración del negocio.
+
+```json
+{
+  "owner_uid": "firebase_auth_id",
+  "instagram_page_id": "...",
+  "system_prompt": "Eres un experto...",
+  "integrations": {
+    "notion": { "api_key": "...", "db_id": "..." }
+  },
+  "products_catalog": [
+    { "id": "p1", "name": "Plan Web", "price": 500 }
+  ]
+}
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### `conversations/{conversation_id}`
 
-## Learn More
+Gestiona el estado y memoria de cada chat.
 
-To learn more about Next.js, take a look at the following resources:
+```json
+{
+  "tenant_id": "tenant_123",
+  "status": "active",
+  "stage": "negotiation",
+  "ai_memory_summary": "Resumen del contexto...",
+  "collected_data": { "name": "Juan", "email": "..." }
+}
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🗺 Roadmap de Desarrollo
+
+El proyecto sigue una estrategia de implementación progresiva:
+
+* [ ] **Fase 1: El Loro (Echo Bot)**
+* Configuración de Meta App y Webhooks.
+* Objetivo: Validar conectividad (recibir mensaje -> responder "Echo").
+
+
+
+
+* [ ] **Fase 2: El Cerebro (IA + Contexto)**
+* Conexión con OpenAI y persistencia de historial en Firestore.
+* Objetivo: Chat fluido con memoria.
+
+
+
+
+* [ ] **Fase 3: Estabilidad (Debounce)**
+* Implementación de lógica de espera (3s) y agrupación de mensajes.
+* Objetivo: Manejo robusto de mensajes consecutivos.
+
+
+
+
+* [ ] **Fase 4: Herramientas (Tools + Notion)**
+* Configuración de *Function Calling* y módulo `notion_service.js`.
+* Objetivo: Cerrar el ciclo de venta automatizado.
+
+
+
+
+
+---
+
+## 📦 Instalación y Configuración
+
+1. **Clonar el repositorio:**
+```bash
+git clone https://github.com/tu-usuario/firesend.git
+cd firesend
+
+```
+
+
+2. **Instalar dependencias:**
+```bash
+npm install
+# O para el backend
+cd functions && npm install
+
+```
+
+
+3. **Variables de Entorno:**
+Configura tu `.env` con las credenciales necesarias:
+```env
+OPENAI_API_KEY=sk-...
+META_ACCESS_TOKEN=...
+FIREBASE_CONFIG=...
+NOTION_KEY=...
+
+```
+
+
+4. **Deploy:**
+```bash
+firebase deploy --only functions
+
+```
+
+
+
+---
+
+**FireSend** - *Automating interactions, scaling businesses.*
+

@@ -10,6 +10,7 @@ import {
   onSnapshot,
   orderBy,
   Timestamp,
+  limit,
 } from "firebase/firestore";
 import {
   Card,
@@ -18,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MessageSquare, User, Clock } from "lucide-react";
+import { MessageSquare, User, Clock, ChevronRight } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -38,12 +39,12 @@ export default function InboxPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Query para obtener conversaciones del tenant actual
     const conversationsRef = collection(db, "conversations");
     const q = query(
       conversationsRef,
       where("tenant_id", "==", user.uid),
       orderBy("last_message_at", "desc"),
+      limit(50), // Paginación básica
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -58,88 +59,112 @@ export default function InboxPage() {
     return () => unsubscribe();
   }, [user]);
 
+  const getStageColor = (stage: string) => {
+    switch (stage) {
+      case "negotiation":
+        return "bg-violet-50 text-violet-600 border-violet-100";
+      case "active":
+        return "bg-emerald-50 text-emerald-600 border-emerald-100";
+      case "closed":
+        return "bg-gray-50 text-gray-600 border-gray-100";
+      default:
+        return "bg-[#F5F4F2] text-[#6B6966] border-[#E8E6E3]";
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-slate-500">
-          Cargando conversaciones...
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-[#FF4D00] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#6B6966] text-sm">Cargando conversaciones...</p>
         </div>
       </div>
     );
   }
 
-  if (conversations.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-slate-800">
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#1A1818] mb-2">
           Bandeja de Entrada
         </h1>
+        <p className="text-[#6B6966]">
+          Gestiona tus conversaciones de Instagram
+        </p>
+      </div>
+
+      {conversations.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <MessageSquare className="h-12 w-12 text-slate-300 mb-4" />
-            <p className="text-slate-500 text-center">
-              No hay conversaciones aún. Las conversaciones de Instagram
-              aparecerán aquí.
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="h-16 w-16 rounded-2xl bg-[#F5F4F2] flex items-center justify-center mb-4">
+              <MessageSquare className="h-8 w-8 text-[#6B6966]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[#1A1818] mb-2">
+              Sin conversaciones
+            </h3>
+            <p className="text-[#6B6966] text-center max-w-sm">
+              Las conversaciones de Instagram aparecerán aquí cuando configures
+              tu webhook.
             </p>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-slate-800">
-        Bandeja de Entrada
-      </h1>
-
-      <div className="space-y-3">
-        {conversations.map((convo) => (
-          <Card
-            key={convo.id}
-            className="hover:shadow-md transition-shadow cursor-pointer"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <User className="h-5 w-5 text-blue-600" />
+      ) : (
+        <div className="space-y-3 stagger-children">
+          {conversations.map((convo) => (
+            <Card
+              key={convo.id}
+              className="group cursor-pointer hover:-translate-y-0.5"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#FF4D00]/10 to-[#FF4D00]/5 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                      <User className="h-6 w-6 text-[#FF4D00]" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-semibold text-[#1A1818]">
+                        @{convo.instagram_username}
+                      </CardTitle>
+                      <CardDescription className="text-xs flex items-center gap-1.5 mt-1 text-[#6B6966]">
+                        <Clock className="h-3 w-3" />
+                        {convo.last_message_at
+                          ?.toDate()
+                          .toLocaleString("es-ES", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-base">
-                      @{convo.instagram_username}
-                    </CardTitle>
-                    <CardDescription className="text-xs flex items-center gap-1 mt-1">
-                      <Clock className="h-3 w-3" />
-                      {convo.last_message_at?.toDate().toLocaleString("es-ES", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </CardDescription>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end gap-2">
+                      <span
+                        className={`text-xs px-2.5 py-1 rounded-lg font-medium border ${getStageColor(convo.stage)}`}
+                      >
+                        {convo.stage}
+                      </span>
+                      {convo.unread_count && convo.unread_count > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#FF4D00] text-white font-bold min-w-[20px] text-center">
+                          {convo.unread_count}
+                        </span>
+                      )}
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-[#6B6966] opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
-                    {convo.stage}
-                  </span>
-                  {convo.unread_count && convo.unread_count > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-600 text-white font-bold">
-                      {convo.unread_count}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 line-clamp-2">
-                {convo.last_message}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-[#6B6966] line-clamp-2 leading-relaxed">
+                  {convo.last_message}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

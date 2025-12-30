@@ -53,11 +53,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {!loading ? (
         children
       ) : (
-        // Loader simple centrado mientras verifica sesión
-        <div className="h-screen w-full flex items-center justify-center bg-slate-50">
-          <div className="animate-pulse flex flex-col items-center">
-            <div className="h-4 w-4 bg-slate-400 rounded-full mb-2"></div>
-            <p className="text-sm text-slate-500 font-medium">
+        <div className="h-screen w-full flex items-center justify-center bg-[#F9F8F6]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-10 w-10 border-2 border-[#FF4D00] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-[#6B6966] font-medium">
               Cargando FireSend...
             </p>
           </div>

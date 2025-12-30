@@ -10,6 +10,7 @@ import {
   onSnapshot,
   Timestamp,
 } from "firebase/firestore";
+import { MessageSquare, Users, Activity, TrendingUp } from "lucide-react";
 
 export default function DashboardHome() {
   const { user } = useAuth();
@@ -22,18 +23,13 @@ export default function DashboardHome() {
 
   useEffect(() => {
     if (!user) return;
-    // 1. Definir rango de tiempo para "Hoy"
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = Timestamp.fromDate(today);
 
-    // 2. Referencia a la colección de conversaciones
     const conversationsRef = collection(db, "conversations");
 
-    // Query 1: Conversaciones activas/modificadas hoy (Aprox. para mensajes)
-    // Nota: Para escalabilidad total, el TDD sugiere workers[cite: 14].
-    // Lo ideal es que el worker incremente un contador en 'tenants/{id}/stats'.
-    // Por ahora, hacemos query directo para cumplir "no placeholders".
     const qMessages = query(
       conversationsRef,
       where("tenant_id", "==", user.uid),
@@ -46,7 +42,6 @@ export default function DashboardHome() {
       where("stage", "==", "negotiation"),
     );
 
-    // 3. Suscripciones en tiempo real (Snapshots)
     const unsubscribeMessages = onSnapshot(qMessages, (snapshot) => {
       setMetrics((prev) => ({ ...prev, messagesToday: snapshot.size }));
     });
@@ -56,7 +51,6 @@ export default function DashboardHome() {
       setLoading(false);
     });
 
-    // Simulación de estado del bot (podría venir de tenants/{id}/status)
     setMetrics((prev) => ({ ...prev, botStatus: "Activo" }));
 
     return () => {
@@ -65,39 +59,97 @@ export default function DashboardHome() {
     };
   }, [user]);
 
-  if (loading) return <div className="p-6">Cargando métricas...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-[#FF4D00] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#6B6966] text-sm">Cargando métricas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-4">Panel de Control - FireSend</h1>
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Tarjeta: Mensajes Hoy */}
-        <div className="p-6 bg-white rounded-lg border shadow-sm">
-          <h3 className="text-sm font-medium text-muted-foreground">
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#1A1818] mb-2">
+          Panel de Control
+        </h1>
+        <p className="text-[#6B6966]">Resumen de tu actividad en FireSend</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 stagger-children">
+        {/* Conversaciones Hoy */}
+        <div className="group p-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(26,24,24,0.06)] hover:shadow-[0_12px_40px_rgba(26,24,24,0.1)] transition-all duration-300 hover:-translate-y-1">
+          <div className="flex items-start justify-between mb-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#FF4D00]/10 to-[#FF4D00]/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <MessageSquare className="h-6 w-6 text-[#FF4D00]" />
+            </div>
+            <TrendingUp className="h-5 w-5 text-emerald-500" />
+          </div>
+          <p className="text-sm font-medium text-[#6B6966] mb-1">
             Conversaciones Hoy
-          </h3>
-          <p className="text-2xl font-bold">{metrics.messagesToday}</p>
+          </p>
+          <p className="text-3xl font-bold text-[#1A1818]">
+            {metrics.messagesToday}
+          </p>
         </div>
 
-        {/* Tarjeta: Leads Capturados */}
-        <div className="p-6 bg-white rounded-lg border shadow-sm">
-          <h3 className="text-sm font-medium text-muted-foreground">
+        {/* Leads en Negociación */}
+        <div className="group p-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(26,24,24,0.06)] hover:shadow-[0_12px_40px_rgba(26,24,24,0.1)] transition-all duration-300 hover:-translate-y-1">
+          <div className="flex items-start justify-between mb-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <Users className="h-6 w-6 text-violet-500" />
+            </div>
+          </div>
+          <p className="text-sm font-medium text-[#6B6966] mb-1">
             Leads en Negociación
-          </h3>
-          <p className="text-2xl font-bold">{metrics.leadsCaptured}</p>
+          </p>
+          <p className="text-3xl font-bold text-[#1A1818]">
+            {metrics.leadsCaptured}
+          </p>
         </div>
 
-        {/* Tarjeta: Estado del Bot */}
-        <div className="p-6 bg-white rounded-lg border shadow-sm">
-          <h3 className="text-sm font-medium text-muted-foreground">
+        {/* Estado del Bot */}
+        <div className="group p-6 bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-[0_8px_32px_rgba(26,24,24,0.06)] hover:shadow-[0_12px_40px_rgba(26,24,24,0.1)] transition-all duration-300 hover:-translate-y-1">
+          <div className="flex items-start justify-between mb-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <Activity className="h-6 w-6 text-emerald-500" />
+            </div>
+            {metrics.botStatus === "Activo" && (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Online
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-medium text-[#6B6966] mb-1">
             Estado del Bot
-          </h3>
+          </p>
           <p
-            className={`text-2xl font-bold ${metrics.botStatus === "Activo" ? "text-green-600" : "text-red-600"}`}
+            className={`text-3xl font-bold ${metrics.botStatus === "Activo" ? "text-emerald-600" : "text-red-500"}`}
           >
             {metrics.botStatus}
           </p>
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mt-8 p-6 bg-gradient-to-br from-[#1A1818] to-[#2D2A2A] rounded-2xl">
+        <h3 className="text-lg font-semibold text-white mb-2">
+          ¿Necesitas ayuda?
+        </h3>
+        <p className="text-white/70 text-sm mb-4">
+          Configura tu bot de IA en la sección de configuración para empezar a
+          automatizar.
+        </p>
+        <a
+          href="/dashboard/settings"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF4D00] text-white text-sm font-semibold rounded-xl hover:bg-[#E64500] transition-colors"
+        >
+          Ir a Configuración
+        </a>
       </div>
     </div>
   );

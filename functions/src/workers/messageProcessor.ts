@@ -1,7 +1,7 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { OpenAIService } from "../services/openai";
+import { GeminiService } from "../services/gemini";
 import { InstagramService } from "../services/instagram";
 
 const db = getFirestore();
@@ -85,14 +85,14 @@ export const onNewMessage = onDocumentCreated(
       return null;
     }
 
-    const openaiKey = tenantData.openaiKey || process.env.OPENAI_API_KEY;
+    const geminiKey = tenantData.geminiKey || process.env.GEMINI_API_KEY;
     const instagramToken = tenantData.instagramToken;
     const systemPrompt =
       tenantData.systemPrompt ||
       "Eres un asistente de ventas amable y profesional.";
 
-    if (!openaiKey) {
-      logger.error("OpenAI API Key no configurada");
+    if (!geminiKey) {
+      logger.error("Gemini API Key no configurada");
       return null;
     }
 
@@ -117,8 +117,8 @@ export const onNewMessage = onDocumentCreated(
     logger.info(`Historial recuperado: ${chatHistory.length} mensajes`);
 
     try {
-      const openaiService = new OpenAIService(openaiKey);
-      const aiResponse = await openaiService.generateResponse(
+      const geminiService = new GeminiService(geminiKey);
+      const aiResponse = await geminiService.generateResponse(
         chatHistory,
         systemPrompt,
       );

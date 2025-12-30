@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función helper para verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función helper para verificar que el usuario es dueño del tenant
+    function isOwner(tenantId) {
+      return isAuthenticated() && request.auth.uid == tenantId;
+    }
+    
+    // Tenants: Solo el dueño puede leer/escribir su configuración
+    match /tenants/{tenantId} {
+      allow read, write: if isOwner(tenantId);
+    }
+    
+    // Conversaciones: Solo el tenant dueño puede acceder
+    match /conversations/{conversationId} {
+      allow read: if isAuthenticated() && 
+        resource.data.tenant_id == request.auth.uid;
+      allow write: if isAuthenticated() && 
+        request.resource.data.tenant_id == request.auth.uid;
+      
+      // Sub-colección de mensajes
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && 
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.tenant_id == request.auth.uid;
+        // Solo el backend (Cloud Functions) puede escribir mensajes
+        allow write: if false;
+      }
+    }
+    
+    // Denegar todo lo demás por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

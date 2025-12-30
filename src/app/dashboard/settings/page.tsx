@@ -16,23 +16,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Sparkles, Instagram, Shield } from "lucide-react";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
-    openaiKey: "",
+    geminiKey: "",
     instagramToken: "",
     instagramPageId: "",
     systemPrompt:
       "Eres un asistente amable de ventas. Tu objetivo es agendar citas.",
   });
 
-  // 1. Cargar datos existentes al abrir la página
   useEffect(() => {
     const loadSettings = async () => {
       if (!user) return;
@@ -41,7 +39,15 @@ export default function SettingsPage() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setFormData(docSnap.data() as any);
+          const data = docSnap.data();
+          setFormData({
+            geminiKey: data.geminiKey || "",
+            instagramToken: data.instagramToken || "",
+            instagramPageId: data.instagramPageId || "",
+            systemPrompt:
+              data.systemPrompt ||
+              "Eres un asistente amable de ventas. Tu objetivo es agendar citas.",
+          });
         }
       } catch (error) {
         console.error("Error cargando configuración:", error);
@@ -54,14 +60,12 @@ export default function SettingsPage() {
     loadSettings();
   }, [user]);
 
-  // 2. Guardar datos en Firestore
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setLoading(true);
 
     try {
-      // Guardamos en la colección 'tenants', documento = ID del usuario
       await setDoc(doc(db, "tenants", user.uid), formData, { merge: true });
       toast.success("Configuración guardada correctamente");
     } catch (error) {
@@ -72,47 +76,80 @@ export default function SettingsPage() {
     }
   };
 
-  if (fetching) return <div className="p-8">Cargando configuración...</div>;
+  if (fetching) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-[#FF4D00] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#6B6966] text-sm">Cargando configuración...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-slate-800">
-        Configuración del Bot
-      </h1>
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#1A1818] mb-2">
+          Configuración
+        </h1>
+        <p className="text-[#6B6966]">
+          Configura tu bot de IA y conexión con Instagram
+        </p>
+      </div>
 
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSave} className="space-y-6 stagger-children">
         {/* Sección IA */}
         <Card>
           <CardHeader>
-            <CardTitle>Inteligencia Artificial (OpenAI)</CardTitle>
-            <CardDescription>Configura la conexión con GPT-4.</CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#FF4D00]/10 to-[#FF4D00]/5 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-[#FF4D00]" />
+              </div>
+              <div>
+                <CardTitle>Inteligencia Artificial</CardTitle>
+                <CardDescription>
+                  Configura la conexión con Google Gemini
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label>OpenAI API Key</Label>
+              <Label>Gemini API Key</Label>
               <Input
                 type="password"
-                placeholder="sk-..."
-                value={formData.openaiKey}
+                placeholder="AIza..."
+                value={formData.geminiKey}
                 onChange={(e) =>
-                  setFormData({ ...formData, openaiKey: e.target.value })
+                  setFormData({ ...formData, geminiKey: e.target.value })
                 }
               />
-              <p className="text-xs text-muted-foreground">
-                Nunca compartiremos tu llave.
+              <p className="text-xs text-[#6B6966]">
+                Obtén tu API key en{" "}
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#FF4D00] hover:underline"
+                >
+                  Google AI Studio
+                </a>
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Prompt del Sistema (Personalidad)</Label>
-              {/* Si falla Textarea, usa <Input /> o instala textarea: npx shadcn@latest add textarea */}
+              <Label>Prompt del Sistema</Label>
               <Textarea
-                className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Instrucciones para el bot..."
                 value={formData.systemPrompt}
                 onChange={(e) =>
                   setFormData({ ...formData, systemPrompt: e.target.value })
                 }
+                className="min-h-[120px]"
               />
+              <p className="text-xs text-[#6B6966]">
+                Define la personalidad y comportamiento de tu asistente de IA
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -120,10 +157,19 @@ export default function SettingsPage() {
         {/* Sección Instagram */}
         <Card>
           <CardHeader>
-            <CardTitle>Conexión con Meta (Instagram)</CardTitle>
-            <CardDescription>Credenciales de la Graph API.</CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-500/5 flex items-center justify-center">
+                <Instagram className="h-5 w-5 text-violet-500" />
+              </div>
+              <div>
+                <CardTitle>Conexión con Meta</CardTitle>
+                <CardDescription>
+                  Credenciales de la Graph API de Instagram
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
               <Label>Instagram Access Token</Label>
               <Input
@@ -148,7 +194,25 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={loading} className="w-full md:w-auto">
+        {/* Security Notice */}
+        <div className="flex items-start gap-3 p-4 bg-[#F5F4F2] rounded-xl border border-[#E8E6E3]">
+          <Shield className="h-5 w-5 text-[#6B6966] mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-[#1A1818]">
+              Tus datos están seguros
+            </p>
+            <p className="text-xs text-[#6B6966] mt-1">
+              Las API keys se almacenan de forma encriptada y nunca se comparten
+              con terceros.
+            </p>
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="w-full md:w-auto h-12 px-8"
+        >
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...

@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import * as logger from "firebase-functions/logger";
 
 interface ChatMessage {
@@ -6,13 +5,27 @@ interface ChatMessage {
   content: string;
 }
 
+// Lazy-loaded module reference
+let GoogleGenerativeAI: typeof import("@google/generative-ai").GoogleGenerativeAI;
+
 export class GeminiService {
-  private client: GoogleGenerativeAI;
+  private apiKey: string;
   private model: string;
 
   constructor(apiKey: string, model: string = "gemini-1.5-flash") {
-    this.client = new GoogleGenerativeAI(apiKey);
+    this.apiKey = apiKey;
     this.model = model;
+  }
+
+  /**
+   * Lazy load the Google Generative AI SDK to avoid deployment timeouts
+   */
+  private async getClient() {
+    if (!GoogleGenerativeAI) {
+      const module = await import("@google/generative-ai");
+      GoogleGenerativeAI = module.GoogleGenerativeAI;
+    }
+    return new GoogleGenerativeAI(this.apiKey);
   }
 
   /**
@@ -27,7 +40,8 @@ export class GeminiService {
     systemPrompt: string,
   ): Promise<string> {
     try {
-      const generativeModel = this.client.getGenerativeModel({
+      const client = await this.getClient();
+      const generativeModel = client.getGenerativeModel({
         model: this.model,
         systemInstruction: systemPrompt,
       });
@@ -73,7 +87,8 @@ export class GeminiService {
    */
   async summarizeConversation(messages: ChatMessage[]): Promise<string> {
     try {
-      const generativeModel = this.client.getGenerativeModel({
+      const client = await this.getClient();
+      const generativeModel = client.getGenerativeModel({
         model: "gemini-1.5-flash",
       });
 

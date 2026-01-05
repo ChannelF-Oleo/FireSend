@@ -1,20 +1,50 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { initializeApp, getApps } from "firebase-admin/app";
 import { GeminiService } from "../services/gemini";
 import { InstagramService } from "../services/instagram";
 
+// Inicializar Firebase Admin si no existe
+if (getApps().length === 0) {
+  initializeApp();
+}
+
 const db = getFirestore();
 
+const DEBOUNCE_MS = 3000;
+const MAX_HISTORY_MESSAGES = 20; // Aumentado para mejor contexto
+
 /**
- * Worker que procesa mensajes nuevos con lógica de debounce
- *
- * Trigger: Cuando se crea un documento en conversations/{convId}/messages
- * Lógica:
- * 1. Espera 3-5 segundos (debounce)
- * 2. Verifica si hay mensajes más recientes
- * 3. Si es el último mensaje: procesa con IA y responde
- * 4. Si no: aborta (otro worker lo procesará)
+ * Formatea el historial para dar contexto a Gemini
+ */
+function formatHistoryForAI(
+  messages: Array<{ role: string; content: string }>,
+): string {
+  return messages
+    .map((msg) => `${msg.role === "user" ? "Usuario" : "Bot"}: ${msg.content}`)
+    .join("\n");
+}
+
+/**
+ * Verifica si el último mensaje es del bot (anti-bucle)
+ */
+async function isLastMessageFromBot(
+  messagesRef: FirebaseFirestore.CollectionReference,
+): Promise<boolean> {
+  const lastMessages = await messagesRef
+    .orderBy("timestamp", "desc")
+    .limit(1)
+    .get();
+
+  if (lastMessages.empty) return false;
+
+  const lastMsg = lastMessages.docs[0].data();
+  return lastMsg.type === "assistant" || lastMsg.type === "bot";
+}
+
+/**
+ * Worker que procesa mensajes nuevos con lógica de debounce y anti-bucle
  */
 export const onNewMessage = onDocumentCreated(
   {
@@ -32,11 +62,13 @@ export const onNewMessage = onDocumentCreated(
       return null;
     }
 
+    // Filtro 1: Solo mensajes de usuario
     if (messageData.type !== "user") {
       logger.info("Mensaje del bot, ignorando");
       return null;
     }
 
+    // Filtro 2: Solo mensajes pendientes
     if (messageData.status !== "pending") {
       logger.info("Mensaje ya procesado, ignorando");
       return null;
@@ -46,7 +78,7 @@ export const onNewMessage = onDocumentCreated(
       `Procesando mensaje ${messageId} en conversación ${conversationId}`,
     );
 
-    const DEBOUNCE_MS = 3000;
+    // Debounce: esperar antes de procesar
     await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_MS));
 
     const messagesRef = db
@@ -54,6 +86,7 @@ export const onNewMessage = onDocumentCreated(
       .doc(conversationId)
       .collection("messages");
 
+    // Verificar si hay mensajes más recientes
     const newerMessages = await messagesRef
       .where("timestamp", ">", messageData.timestamp)
       .where("type", "==", "user")
@@ -65,6 +98,16 @@ export const onNewMessage = onDocumentCreated(
       return null;
     }
 
+    // TAREA 4: Seguridad Anti-Bucle - verificar que el último mensaje NO sea del bot
+    const botWasLast = await isLastMessageFromBot(messagesRef);
+    if (botWasLast) {
+      logger.warn(
+        "Último mensaje es del bot, posible bucle detectado, abortando",
+      );
+      return null;
+    }
+
+    // Obtener datos de la conversación
     const conversationDoc = await db
       .collection("conversations")
       .doc(conversationId)
@@ -73,6 +116,15 @@ export const onNewMessage = onDocumentCreated(
     const conversationData = conversationDoc.data();
     if (!conversationData) {
       logger.error("Conversación no encontrada");
+      return null;
+    }
+
+    // Verificar si el bot está pausado para esta conversación
+    if (conversationData.bot_paused) {
+      logger.info(`Bot pausado para conversación ${conversationId}, ignorando`);
+      await messagesRef.doc(messageId).update({
+        status: "skipped_bot_paused",
+      });
       return null;
     }
 
@@ -101,12 +153,14 @@ export const onNewMessage = onDocumentCreated(
       return null;
     }
 
+    // TAREA 4: Recuperar últimos N mensajes para contexto
     const historySnapshot = await messagesRef
-      .orderBy("timestamp", "asc")
-      .limit(20)
+      .orderBy("timestamp", "desc")
+      .limit(MAX_HISTORY_MESSAGES)
       .get();
 
-    const chatHistory = historySnapshot.docs.map((doc) => {
+    // Invertir para orden cronológico
+    const chatHistory = historySnapshot.docs.reverse().map((doc) => {
       const data = doc.data();
       return {
         role: data.type === "user" ? "user" : "assistant",
@@ -115,6 +169,7 @@ export const onNewMessage = onDocumentCreated(
     }) as Array<{ role: "user" | "assistant"; content: string }>;
 
     logger.info(`Historial recuperado: ${chatHistory.length} mensajes`);
+    logger.debug(`Contexto:\n${formatHistoryForAI(chatHistory)}`);
 
     try {
       const geminiService = new GeminiService(geminiKey);
@@ -138,6 +193,7 @@ export const onNewMessage = onDocumentCreated(
         accessToken: instagramToken,
       });
 
+      // Guardar respuesta del bot
       await messagesRef.add({
         text: aiResponse,
         sender_id: conversationData.page_id,
@@ -148,12 +204,14 @@ export const onNewMessage = onDocumentCreated(
         instagram_message_id: sentMessageId,
       });
 
+      // Actualizar conversación
       await db.collection("conversations").doc(conversationId).update({
         last_message: aiResponse,
         last_message_at: FieldValue.serverTimestamp(),
         unread_count: 0,
       });
 
+      // Marcar mensaje original como procesado
       await messagesRef.doc(messageId).update({
         status: "processed",
       });

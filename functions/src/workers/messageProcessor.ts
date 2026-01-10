@@ -137,6 +137,17 @@ export const onNewMessage = onDocumentCreated(
       return null;
     }
 
+    // Verificar interruptor maestro del bot
+    if (tenantData.isBotActive === false) {
+      logger.info(
+        `Bot desactivado globalmente para tenant ${tenantId}, guardando mensaje sin responder`,
+      );
+      await messagesRef.doc(messageId).update({
+        status: "skipped_bot_disabled",
+      });
+      return null;
+    }
+
     const geminiKey = tenantData.geminiKey || process.env.GEMINI_API_KEY;
     const instagramToken = tenantData.instagramToken;
     const systemPrompt =
@@ -173,14 +184,73 @@ export const onNewMessage = onDocumentCreated(
 
     try {
       const geminiService = new GeminiService(geminiKey);
+
+      // RAG: Buscar contexto relevante en la base de conocimiento
+      let ragContext: string | undefined;
+      const lastUserMessage = chatHistory[chatHistory.length - 1]?.content;
+
+      if (lastUserMessage) {
+        try {
+          // Obtener vectores del tenant
+          const vectorsSnapshot = await db
+            .collection("tenants")
+            .doc(tenantId)
+            .collection("vectors")
+            .get();
+
+          if (!vectorsSnapshot.empty) {
+            // Generar embedding de la pregunta
+            const queryEmbedding =
+              await geminiService.generateEmbedding(lastUserMessage);
+
+            // Buscar documentos relevantes
+            const vectors = vectorsSnapshot.docs.map((doc) => ({
+              content: doc.data().content,
+              embedding: doc.data().embedding,
+            }));
+
+            const relevantDocs = await geminiService.searchRelevantDocs(
+              queryEmbedding,
+              vectors,
+              3,
+            );
+
+            if (relevantDocs.length > 0) {
+              ragContext = relevantDocs.map((d) => d.content).join("\n\n");
+              logger.info(
+                `RAG: Encontrados ${relevantDocs.length} documentos relevantes`,
+              );
+            }
+          }
+        } catch (ragError) {
+          logger.warn(
+            "Error en búsqueda RAG, continuando sin contexto:",
+            ragError,
+          );
+        }
+      }
+
+      // Generar respuesta con contexto RAG
       const aiResponse = await geminiService.generateResponse(
         chatHistory,
         systemPrompt,
+        ragContext,
       );
 
       logger.info(
         `Respuesta de IA generada: ${aiResponse.substring(0, 50)}...`,
       );
+
+      // Análisis de sentimiento (async, no bloquea)
+      geminiService
+        .analyzeSentiment(lastUserMessage)
+        .then(async (sentiment) => {
+          try {
+            await messagesRef.doc(messageId).update({ sentiment });
+          } catch (e) {
+            logger.warn("Error guardando sentimiento:", e);
+          }
+        });
 
       const instagramService = new InstagramService();
       const senderId = messageData.sender_id;

@@ -18,6 +18,25 @@ service cloud.firestore {
     // 1. Tenants (Configuración del Usuario)
     match /tenants/{tenantId} {
       allow read, write: if isOwner(tenantId);
+      
+      // Sub-colección de estadísticas diarias
+      match /stats_daily/{dateId} {
+        allow read: if isOwner(tenantId);
+        allow write: if false; // Solo Cloud Functions
+      }
+      
+      // Sub-colección de documentos de conocimiento
+      match /knowledge_docs/{docId} {
+        allow read: if isOwner(tenantId);
+        allow delete: if isOwner(tenantId);
+        allow create, update: if false; // Solo Cloud Functions
+      }
+      
+      // Sub-colección de vectores (embeddings)
+      match /vectors/{vectorId} {
+        allow read: if isOwner(tenantId);
+        allow write: if false; // Solo Cloud Functions
+      }
     }
     
     // 2. Pages Map (Mapeo: PageID -> TenantID)

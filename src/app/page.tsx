@@ -75,9 +75,6 @@ export default function LandingPage() {
                   Empezar Ahora <ArrowRight size={18} />
                 </Button>
               </Link>
-              <p className="text-sm text-[#6B6966] pt-2">
-                No requiere tarjeta de crédito
-              </p>
             </div>
           </div>
         </section>
@@ -166,6 +163,125 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Pricing Section */}
+        <section className="w-full py-24 bg-white/50">
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#1A1818] mb-4">
+                Planes simples y transparentes
+              </h2>
+              <p className="text-[#6B6966] text-lg max-w-xl mx-auto">
+                Empieza gratis y escala cuando lo necesites
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+              {/* Plan Gratis */}
+              <div className="flex flex-col p-8 rounded-2xl bg-white/70 backdrop-blur-xl border border-[#E8E6E3] shadow-sm">
+                <h3 className="text-xl font-bold text-[#1A1818] mb-2">
+                  Starter
+                </h3>
+                <p className="text-[#6B6966] mb-4">Para probar el servicio</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-[#1A1818]">$0</span>
+                  <span className="text-[#6B6966]">/mes</span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    100 mensajes/mes
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />1
+                    cuenta de Instagram
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    Dashboard básico
+                  </li>
+                </ul>
+                <Link href="/login">
+                  <Button variant="outline" className="w-full">
+                    Comenzar Gratis
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Plan Pro */}
+              <div className="flex flex-col p-8 rounded-2xl bg-gradient-to-br from-[#FF4D00] to-[#FF6B2B] text-white shadow-xl shadow-[#FF4D00]/20 relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#1A1818] text-white text-xs font-semibold rounded-full">
+                  Popular
+                </div>
+                <h3 className="text-xl font-bold mb-2">Pro</h3>
+                <p className="text-white/80 mb-4">
+                  Para negocios en crecimiento
+                </p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold">$29</span>
+                  <span className="text-white/80">/mes</span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-2 text-sm text-white/90">
+                    <CheckCircle2 className="h-4 w-4" />
+                    5,000 mensajes/mes
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-white/90">
+                    <CheckCircle2 className="h-4 w-4" />3 cuentas de Instagram
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-white/90">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Métricas avanzadas
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-white/90">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Soporte prioritario
+                  </li>
+                </ul>
+                <Link href="/login">
+                  <Button className="w-full bg-white text-[#FF4D00] hover:bg-white/90">
+                    Empezar Ahora
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Plan Enterprise */}
+              <div className="flex flex-col p-8 rounded-2xl bg-white/70 backdrop-blur-xl border border-[#E8E6E3] shadow-sm">
+                <h3 className="text-xl font-bold text-[#1A1818] mb-2">
+                  Enterprise
+                </h3>
+                <p className="text-[#6B6966] mb-4">Para grandes equipos</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-[#1A1818]">$99</span>
+                  <span className="text-[#6B6966]">/mes</span>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    Mensajes ilimitados
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    Cuentas ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    API personalizada
+                  </li>
+                  <li className="flex items-center gap-2 text-sm text-[#6B6966]">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    Soporte dedicado
+                  </li>
+                </ul>
+                <Link href="/login">
+                  <Button variant="outline" className="w-full">
+                    Contactar Ventas
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="w-full py-24 bg-gradient-to-br from-[#1A1818] to-[#2D2A2A]">
           <div className="container px-4 md:px-6 mx-auto text-center">
@@ -195,13 +311,13 @@ export default function LandingPage() {
           </div>
           <nav className="flex gap-6">
             <Link
-              href="#"
+              href="/terms"
               className="text-sm text-[#6B6966] hover:text-[#1A1818] transition-colors"
             >
               Términos
             </Link>
             <Link
-              href="#"
+              href="/privacy"
               className="text-sm text-[#6B6966] hover:text-[#1A1818] transition-colors"
             >
               Privacidad

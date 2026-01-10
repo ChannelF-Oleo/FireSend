@@ -7,7 +7,7 @@ import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -25,6 +25,8 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  Bot,
+  BotOff,
 } from "lucide-react";
 
 // Configuración de Facebook SDK
@@ -47,12 +49,12 @@ interface PageOption {
 }
 
 interface TenantData {
-  geminiKey?: string;
   systemPrompt?: string;
   oauthConnected?: boolean;
   connectedPageName?: string;
   instagramPageId?: string;
   tokenExpiresAt?: { toDate: () => Date } | Date;
+  isBotActive?: boolean;
 }
 
 export default function SettingsPage() {
@@ -65,9 +67,9 @@ export default function SettingsPage() {
   const [selectedPage, setSelectedPage] = useState<string>("");
 
   const [formData, setFormData] = useState({
-    geminiKey: "",
     systemPrompt:
       "Eres un asistente amable de ventas. Tu objetivo es agendar citas.",
+    isBotActive: true,
   });
 
   const [connectionStatus, setConnectionStatus] = useState<{
@@ -84,10 +86,10 @@ export default function SettingsPage() {
       if (docSnap.exists()) {
         const data = docSnap.data() as TenantData;
         setFormData({
-          geminiKey: data.geminiKey || "",
           systemPrompt:
             data.systemPrompt ||
             "Eres un asistente amable de ventas. Tu objetivo es agendar citas.",
+          isBotActive: data.isBotActive !== false, // Default true
         });
         setConnectionStatus({
           connected: data.oauthConnected || false,
@@ -300,6 +302,60 @@ export default function SettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Interruptor Maestro Bot ON/OFF */}
+        <Card
+          className={
+            formData.isBotActive
+              ? "border-emerald-200 bg-emerald-50/30"
+              : "border-amber-200 bg-amber-50/30"
+          }
+        >
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`h-10 w-10 rounded-xl flex items-center justify-center ${formData.isBotActive ? "bg-emerald-100" : "bg-amber-100"}`}
+                >
+                  {formData.isBotActive ? (
+                    <Bot className="h-5 w-5 text-emerald-600" />
+                  ) : (
+                    <BotOff className="h-5 w-5 text-amber-600" />
+                  )}
+                </div>
+                <div>
+                  <CardTitle>Bot de IA</CardTitle>
+                  <CardDescription>
+                    {formData.isBotActive
+                      ? "El bot está respondiendo automáticamente"
+                      : "El bot está pausado globalmente"}
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-medium ${formData.isBotActive ? "text-emerald-600" : "text-amber-600"}`}
+                >
+                  {formData.isBotActive ? "Activo" : "Pausado"}
+                </span>
+                <Switch
+                  checked={formData.isBotActive}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isBotActive: checked })
+                  }
+                />
+              </div>
+            </div>
+          </CardHeader>
+          {!formData.isBotActive && (
+            <CardContent>
+              <p className="text-sm text-amber-700">
+                ⚠️ Cuando el bot está pausado, los mensajes entrantes se
+                guardarán pero no se responderán automáticamente.
+              </p>
+            </CardContent>
+          )}
+        </Card>
+
         {/* Sección Instagram OAuth */}
         <Card>
           <CardHeader>
@@ -418,34 +474,12 @@ export default function SettingsPage() {
               <div>
                 <CardTitle>Inteligencia Artificial</CardTitle>
                 <CardDescription>
-                  Configura la conexión con Google Gemini
+                  Configura el comportamiento de tu asistente IA
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label>Gemini API Key</Label>
-              <Input
-                type="password"
-                placeholder="AIza..."
-                value={formData.geminiKey}
-                onChange={(e) =>
-                  setFormData({ ...formData, geminiKey: e.target.value })
-                }
-              />
-              <p className="text-xs text-[#6B6966]">
-                Obtén tu API key en{" "}
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#FF4D00] hover:underline"
-                >
-                  Google AI Studio
-                </a>
-              </p>
-            </div>
             <div className="space-y-2">
               <Label>Prompt del Sistema</Label>
               <Textarea
@@ -456,6 +490,10 @@ export default function SettingsPage() {
                 }
                 className="min-h-[120px]"
               />
+              <p className="text-xs text-[#6B6966]">
+                Define cómo debe comportarse tu asistente: tono, objetivos,
+                información del negocio, etc.
+              </p>
             </div>
           </CardContent>
         </Card>

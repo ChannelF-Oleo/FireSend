@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Flame,
+  BookOpen,
 } from "lucide-react";
 
 const ROUTES = [
@@ -29,6 +30,12 @@ const ROUTES = [
     icon: MessageSquare,
     href: "/dashboard/inbox",
     match: "/dashboard/inbox",
+  },
+  {
+    label: "Knowledge Base",
+    icon: BookOpen,
+    href: "/dashboard/knowledge",
+    match: "/dashboard/knowledge",
   },
   {
     label: "Configuración",

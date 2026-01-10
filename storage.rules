@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Función helper para verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función helper para verificar que el usuario es dueño del tenant
+    function isOwner(tenantId) {
+      return isAuthenticated() && request.auth.uid == tenantId;
+    }
+    
+    // Documentos de Knowledge Base por tenant
+    match /tenants/{tenantId}/docs/{fileName} {
+      // Lectura: Solo el dueño del tenant
+      allow read: if isOwner(tenantId);
+      
+      // Escritura: Solo el dueño del tenant
+      // Validaciones adicionales de seguridad
+      allow write: if isOwner(tenantId)
+        && request.resource.size < 10 * 1024 * 1024 // Máximo 10MB
+        && (
+          request.resource.contentType.matches('text/.*') ||
+          request.resource.contentType == 'application/pdf' ||
+          request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
+      
+      // Eliminar: Solo el dueño
+      allow delete: if isOwner(tenantId);
+    }
+    
+    // Denegar todo lo demás
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

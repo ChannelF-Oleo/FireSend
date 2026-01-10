@@ -3,12 +3,21 @@ import * as auth from "./controllers/authController";
 import * as message from "./controllers/messageController";
 import { onNewMessage } from "./workers/messageProcessor";
 import { refreshTokens } from "./workers/tokenRefresher";
+import { onMessageStats, onConversationUpdate } from "./workers/statsUpdater";
+import { onFileUpload } from "./workers/knowledgeProcessor";
 
 // Webhook de Instagram
 export const webhookHandler = webhook.instagramWebhook;
 
 // Worker de procesamiento de mensajes con IA
 export const messageProcessor = onNewMessage;
+
+// Workers de estadísticas
+export const statsMessageProcessor = onMessageStats;
+export const statsConversationProcessor = onConversationUpdate;
+
+// Worker de procesamiento de documentos (RAG)
+export const knowledgeProcessor = onFileUpload;
 
 // Endpoints de autenticación OAuth
 export const authInstagram = auth.authInstagram;

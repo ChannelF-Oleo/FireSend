@@ -18,7 +18,25 @@
         "firebase-debug.*.log",
         "*.local"
       ],
-      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
     }
-  ]
+  ],
+  "hosting": {
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      { "source": "/api/authInstagram", "function": "authInstagram" },
+      { "source": "/api/getPages", "function": "getPages" },
+      { "source": "/api/connectPage", "function": "connectPage" },
+      { "source": "/api/disconnectInstagram", "function": "disconnectInstagram" },
+      { "source": "**", "destination": "/index.html" }
+    ]
+  }
 }
+

@@ -4,17 +4,26 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { initializeApp, getApps } from "firebase-admin/app";
 
-// Inicializar Firebase Admin si no existe
-if (getApps().length === 0) {
-  initializeApp();
-}
-
-const db = getFirestore();
-const storage = getStorage();
-
 // Tamaño máximo de chunk (en caracteres)
 const CHUNK_SIZE = 1000;
 const CHUNK_OVERLAP = 200;
+
+/**
+ * Lazy initialization de Firebase Admin
+ */
+function getDb() {
+  if (getApps().length === 0) {
+    initializeApp();
+  }
+  return getFirestore();
+}
+
+function getStorageInstance() {
+  if (getApps().length === 0) {
+    initializeApp();
+  }
+  return getStorage();
+}
 
 /**
  * Extrae texto de un archivo según su tipo
@@ -108,6 +117,10 @@ export const onFileUpload = onObjectFinalized(
       logger.info(`Ignorando archivo: ${filePath}`);
       return null;
     }
+
+    // Lazy init
+    const db = getDb();
+    const storage = getStorageInstance();
 
     // Extraer tenantId del path: tenants/{tenantId}/docs/{fileName}
     const pathParts = filePath.split("/");

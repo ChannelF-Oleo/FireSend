@@ -3,12 +3,15 @@ import * as logger from "firebase-functions/logger";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { initializeApp, getApps } from "firebase-admin/app";
 
-// Inicializar Firebase Admin si no existe
-if (getApps().length === 0) {
-  initializeApp();
+/**
+ * Lazy initialization de Firebase Admin
+ */
+function getDb() {
+  if (getApps().length === 0) {
+    initializeApp();
+  }
+  return getFirestore();
 }
-
-const db = getFirestore();
 
 /**
  * Obtiene la fecha en formato YYYY-MM-DD para usar como ID de documento
@@ -46,6 +49,8 @@ export const onMessageStats = onDocumentCreated(
     if (!messageData) {
       return null;
     }
+
+    const db = getDb();
 
     try {
       // Obtener tenant_id de la conversación
@@ -124,11 +129,12 @@ export const onConversationUpdate = onDocumentCreated(
   },
   async (event) => {
     const conversationData = event.data?.data();
-    const conversationId = event.params.conversationId;
 
     if (!conversationData) {
       return null;
     }
+
+    const db = getDb();
 
     try {
       const tenantId = conversationData.tenant_id;

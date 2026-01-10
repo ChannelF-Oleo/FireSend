@@ -16,6 +16,8 @@ import {
   ChevronRight,
   Flame,
   BookOpen,
+  BarChart3,
+  Zap,
 } from "lucide-react";
 
 const ROUTES = [
@@ -30,6 +32,18 @@ const ROUTES = [
     icon: MessageSquare,
     href: "/dashboard/inbox",
     match: "/dashboard/inbox",
+  },
+  {
+    label: "Analíticas",
+    icon: BarChart3,
+    href: "/dashboard/analytics",
+    match: "/dashboard/analytics",
+  },
+  {
+    label: "Triggers",
+    icon: Zap,
+    href: "/dashboard/triggers",
+    match: "/dashboard/triggers",
   },
   {
     label: "Knowledge Base",

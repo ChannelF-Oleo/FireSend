@@ -37,6 +37,11 @@ service cloud.firestore {
         allow read: if isOwner(tenantId);
         allow write: if false; // Solo Cloud Functions
       }
+      
+      // Sub-colección de triggers/automatizaciones
+      match /triggers/{triggerId} {
+        allow read, write: if isOwner(tenantId);
+      }
     }
     
     // 2. Pages Map (Mapeo: PageID -> TenantID)

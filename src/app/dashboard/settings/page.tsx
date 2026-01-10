@@ -38,8 +38,8 @@ const FB_PERMISSIONS = [
   "instagram_manage_messages",
 ].join(",");
 
-// URLs de Cloud Functions
-const FUNCTIONS_BASE_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || "";
+// URLs de Cloud Functions (usando rewrites de Next.js para Vercel)
+const FUNCTIONS_BASE_URL = "/api";
 
 interface PageOption {
   pageId: string;

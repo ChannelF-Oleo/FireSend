@@ -165,19 +165,16 @@ export default function ConversationPage() {
       }
 
       // Enviar mensaje via Cloud Function
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_FUNCTIONS_URL}/sendManualMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.uid,
-            conversationId,
-            recipientId: conversation.instagram_user_id,
-            message: newMessage.trim(),
-          }),
-        },
-      );
+      const response = await fetch(`/api/sendManualMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          conversationId,
+          recipientId: conversation.instagram_user_id,
+          message: newMessage.trim(),
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();

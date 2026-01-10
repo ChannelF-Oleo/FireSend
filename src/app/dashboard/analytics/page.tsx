@@ -426,7 +426,7 @@ export default function AnalyticsPage() {
                       border: "1px solid #E8E6E3",
                       borderRadius: "8px",
                     }}
-                    formatter={(value: number) => [`${value} min`, "Tiempo"]}
+                    formatter={(value) => [`${value ?? 0} min`, "Tiempo"]}
                   />
                   <Line
                     type="monotone"

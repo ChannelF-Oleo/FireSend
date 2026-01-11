@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
+import { logger } from "@/lib/logger";
 import {
   collection,
   query,
@@ -30,6 +31,8 @@ import {
   Zap,
   Smile,
 } from "lucide-react";
+
+const log = logger.module("Dashboard");
 
 interface Metrics {
   conversationsToday: number;
@@ -83,6 +86,8 @@ export default function DashboardHome() {
   useEffect(() => {
     if (!user) return;
 
+    log.info("Cargando métricas del dashboard", { userId: user.uid });
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const dateKey = new Date().toISOString().split("T")[0];
@@ -91,10 +96,15 @@ export default function DashboardHome() {
     const checkConfig = async () => {
       const tenantDoc = await getDoc(doc(db, "tenants", user.uid));
       const data = tenantDoc.data();
+      const isConfigured = !!data?.instagramToken;
+      const isBotActive = data?.isBotActive !== false;
+
+      log.debug("Configuración del tenant", { isConfigured, isBotActive });
+
       setMetrics((prev) => ({
         ...prev,
-        isConfigured: !!data?.instagramToken,
-        isBotActive: data?.isBotActive !== false,
+        isConfigured,
+        isBotActive,
       }));
     };
     checkConfig();
@@ -104,6 +114,10 @@ export default function DashboardHome() {
     const unsubStats = onSnapshot(statsRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data() as DailyStats;
+        log.debug("Stats diarias actualizadas", {
+          totalMessages: data.total_messages,
+          aiMessages: data.ai_messages,
+        });
         setDailyStats({
           total_messages: data.total_messages || 0,
           ai_messages: data.ai_messages || 0,
@@ -131,6 +145,7 @@ export default function DashboardHome() {
         weekData.push(dayDoc.exists() ? dayDoc.data()?.total_messages || 0 : 0);
       }
       setWeeklyMessages(weekData);
+      log.debug("Stats semanales cargadas", { weekData });
     };
     loadWeeklyStats();
 
@@ -153,6 +168,13 @@ export default function DashboardHome() {
         if (data.bot_paused) botPausedCount++;
       });
 
+      log.success("Métricas actualizadas", {
+        total: snapshot.size,
+        conversationsToday,
+        unreadMessages,
+        botPausedCount,
+      });
+
       setMetrics((prev) => ({
         ...prev,
         conversationsToday,
@@ -165,6 +187,7 @@ export default function DashboardHome() {
     });
 
     return () => {
+      log.debug("Limpiando listeners del dashboard");
       unsubStats();
       unsubConversations();
     };

@@ -7,6 +7,8 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
+import { MobileNav } from "./mobile-nav";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -19,6 +21,8 @@ import {
   BarChart3,
   Zap,
 } from "lucide-react";
+
+const log = logger.module("Sidebar");
 
 const ROUTES = [
   {
@@ -66,11 +70,13 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     try {
+      log.info("Iniciando cierre de sesión...");
       await signOut(auth);
       toast.success("Sesión cerrada correctamente");
+      log.success("Sesión cerrada exitosamente");
       router.push("/login");
     } catch (error) {
-      console.error("Error al salir:", error);
+      log.error("Error al cerrar sesión", error);
       toast.error("Error al cerrar sesión");
     }
   };
@@ -85,13 +91,16 @@ export function Sidebar() {
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "hidden md:flex flex-col h-screen bg-white/70 backdrop-blur-xl border-r border-white/50 transition-all duration-300 relative z-20",
-          isCollapsed ? "w-20" : "w-64",
+          "hidden md:flex flex-col h-screen bg-white/70 backdrop-blur-xl border-r border-white/50 transition-all duration-300 relative z-20 sticky top-0",
+          isCollapsed ? "w-20" : "w-64 lg:w-72",
         )}
       >
         {/* Collapse Button */}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => {
+            setIsCollapsed(!isCollapsed);
+            log.debug("Sidebar colapsado", { isCollapsed: !isCollapsed });
+          }}
           className="absolute -right-3 top-8 h-7 w-7 bg-white border border-[#E8E6E3] shadow-md rounded-full flex items-center justify-center hover:bg-[#F9F8F6] hover:border-[#FF4D00] transition-all duration-200 z-30 group"
         >
           {isCollapsed ? (
@@ -114,18 +123,20 @@ export function Sidebar() {
             isCollapsed ? "justify-center" : "justify-start gap-3",
           )}
         >
-          <div className="h-10 w-10 bg-gradient-to-br from-[#FF4D00] to-[#FF7A3D] rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#FF4D00]/20">
-            <Flame size={20} fill="currentColor" />
-          </div>
-          {!isCollapsed && (
-            <span className="font-bold text-xl text-[#1A1818] tracking-tight">
-              FireSend
-            </span>
-          )}
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-gradient-to-br from-[#FF4D00] to-[#FF7A3D] rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-[#FF4D00]/20">
+              <Flame size={20} fill="currentColor" />
+            </div>
+            {!isCollapsed && (
+              <span className="font-bold text-xl text-[#1A1818] tracking-tight">
+                FireSend
+              </span>
+            )}
+          </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 flex flex-col gap-1.5 px-3">
+        <nav className="flex-1 py-6 flex flex-col gap-1.5 px-3 overflow-y-auto">
           {ROUTES.map((route, index) => (
             <Link
               key={route.href}
@@ -133,7 +144,7 @@ export function Sidebar() {
               title={isCollapsed ? route.label : undefined}
               style={{ animationDelay: `${index * 50}ms` }}
               className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 animate-fade-in",
+                "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 animate-fade-in group",
                 isActive(route.match)
                   ? "bg-[#FF4D00]/10 text-[#FF4D00] shadow-sm"
                   : "text-[#6B6966] hover:bg-[#F5F4F2] hover:text-[#1A1818]",
@@ -143,11 +154,13 @@ export function Sidebar() {
               <route.icon
                 size={20}
                 className={cn(
-                  "transition-colors duration-200",
-                  isActive(route.match) ? "text-[#FF4D00]" : "text-[#6B6966]",
+                  "transition-all duration-200 shrink-0",
+                  isActive(route.match)
+                    ? "text-[#FF4D00]"
+                    : "text-[#6B6966] group-hover:text-[#1A1818]",
                 )}
               />
-              {!isCollapsed && <span>{route.label}</span>}
+              {!isCollapsed && <span className="truncate">{route.label}</span>}
             </Link>
           ))}
         </nav>
@@ -162,40 +175,14 @@ export function Sidebar() {
             )}
             title="Cerrar Sesión"
           >
-            <LogOut size={20} />
+            <LogOut size={20} className="shrink-0" />
             {!isCollapsed && <span>Cerrar Sesión</span>}
           </button>
         </div>
       </aside>
 
-      {/* MOBILE BOTTOM NAV */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-t border-white/50 z-50 flex items-center justify-around px-2 pb-safe shadow-[0_-4px_20px_rgba(26,24,24,0.08)]">
-        {ROUTES.map((route) => (
-          <Link
-            key={route.href}
-            href={route.href}
-            className={cn(
-              "flex flex-col items-center justify-center w-full h-full space-y-1 transition-all duration-200",
-              isActive(route.match) ? "text-[#FF4D00]" : "text-[#6B6966]",
-            )}
-          >
-            <route.icon
-              size={22}
-              strokeWidth={isActive(route.match) ? 2.5 : 2}
-              className={isActive(route.match) ? "animate-pulse-soft" : ""}
-            />
-            <span className="text-[10px] font-semibold">{route.label}</span>
-          </Link>
-        ))}
-
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center w-full h-full space-y-1 text-[#6B6966] hover:text-red-500 transition-colors duration-200"
-        >
-          <LogOut size={22} />
-          <span className="text-[10px] font-semibold">Salir</span>
-        </button>
-      </nav>
+      {/* MOBILE NAVIGATION - Componente separado optimizado */}
+      <MobileNav />
     </>
   );
 }

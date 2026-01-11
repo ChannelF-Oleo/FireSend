@@ -42,12 +42,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // DEFINICIÓN DE RUTAS:
       // Rutas donde puede entrar cualquiera (invitados)
-      const isPublicPath =
-        pathname === "/login" ||
-        pathname === "/register" ||
-        pathname === "/" ||
-        pathname === "/privacy" ||
-        pathname === "/terms";
+      const publicPaths = [
+        "/login",
+        "/register",
+        "/",
+        "/privacy",
+        "/terms",
+        "/about",
+        "/contact",
+        "/cookies",
+      ];
+      const isPublicPath = publicPaths.includes(pathname);
 
       // LÓGICA DE REDIRECCIÓN:
 

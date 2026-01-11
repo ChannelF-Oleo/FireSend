@@ -16,7 +16,10 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-[#F9F8F6]">
       {/* Navbar - Responsive */}
       <header className="px-4 sm:px-6 h-16 flex items-center justify-between border-b border-[#E8E6E3]/50 bg-white/70 backdrop-blur-xl sticky top-0 z-50">
-        <Link href="/" className="flex items-center gap-2.5 font-bold text-xl text-[#1A1818]">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 font-bold text-xl text-[#1A1818]"
+        >
           <div className="h-9 w-9 bg-gradient-to-br from-[#FF4D00] to-[#FF7A3D] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#FF4D00]/20">
             <Flame size={18} fill="currentColor" />
           </div>
@@ -302,23 +305,54 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section - Responsive */}
-        <section className="w-full py-16 sm:py-24 bg-gradient-to-br from-[#1A1818] to-[#2D2A2A]">
-          <div className="container px-4 md:px-6 mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4 px-4">
-              ¿Listo para automatizar?
-            </h2>
-            <p className="text-white/70 text-base sm:text-lg mb-6 sm:mb-8 max-w-xl mx-auto px-4">
-              Únete a cientos de negocios que ya usan FireSend para escalar sus
-              ventas.
-            </p>
-            <Link href="/login">
-              <Button
-                size="lg"
-                className="h-12 sm:h-14 px-6 sm:px-8 text-sm sm:text-base gap-2"
-              >
-                Comenzar Gratis <ArrowRight size={18} />
-              </Button>
-            </Link>
+        <section className="w-full py-20 sm:py-32 relative overflow-hidden">
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1A1818] via-[#2D2A2A] to-[#1A1818]" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF4D00]/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[#FF4D00]/10 rounded-full blur-3xl" />
+
+          <div className="container px-4 md:px-6 mx-auto relative z-10">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 mb-6">
+                <Sparkles size={14} className="text-[#FF4D00]" />
+                <span className="text-sm font-medium text-white/80">
+                  Empieza gratis, sin tarjeta
+                </span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
+                ¿Listo para poner tu Instagram en{" "}
+                <span className="bg-gradient-to-r from-[#FF4D00] to-[#FF7A3D] bg-clip-text text-transparent">
+                  piloto automático
+                </span>
+                ?
+              </h2>
+
+              <p className="text-white/60 text-base sm:text-lg mb-8 sm:mb-10 max-w-xl mx-auto">
+                Únete a cientos de negocios que ya usan FireSend para responder
+                clientes, calificar leads y cerrar ventas mientras duermen.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/login">
+                  <Button
+                    size="lg"
+                    className="h-14 px-8 text-base gap-2 shadow-xl shadow-[#FF4D00]/25 w-full sm:w-auto"
+                  >
+                    Comenzar Gratis <ArrowRight size={18} />
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 px-8 text-base bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white w-full sm:w-auto"
+                  >
+                    Hablar con ventas
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>

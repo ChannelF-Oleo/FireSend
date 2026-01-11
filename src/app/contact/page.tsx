@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbziMyrpWJqc5LtNLA-0Prq-2f7YFUPCKDDa44G6wXG-ZW6hhzzWrwh_s2jFKAlnaoMu9g/exec";
+const GOOGLE_SCRIPT_URL ="https://script.google.com/macros/s/AKfycbyVfkRiVZeFqulPMvAwXU_cpFWhfyZhVRMhV-IaSZn9p-FV5pYCIipxmSfHuz9rgCN3Hw/exec"
+
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({

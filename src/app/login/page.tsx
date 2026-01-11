@@ -50,6 +50,15 @@ export default function LoginPage() {
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-[#FF4D00]/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#FF4D00]/5 rounded-full blur-3xl" />
 
+      {/* Back to home link */}
+      <Link
+        href="/"
+        className="absolute top-6 left-6 flex items-center gap-2 text-[#6B6966] hover:text-[#FF4D00] transition-colors z-20"
+      >
+        <Flame size={20} className="text-[#FF4D00]" />
+        <span className="text-sm font-medium">Volver al inicio</span>
+      </Link>
+
       <Card className="w-full max-w-md relative z-10 animate-fade-in">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">

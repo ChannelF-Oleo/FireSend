@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Flame, Twitter, Instagram, Github, Mail, Heart } from "lucide-react";
+import { Flame, Instagram, Mail, Heart, MessageCircle } from "lucide-react";
 
 const FOOTER_LINKS = {
   producto: [
@@ -11,25 +11,27 @@ const FOOTER_LINKS = {
   ],
   empresa: [
     { label: "Sobre Nosotros", href: "/about" },
-    { label: "Blog", href: "/blog" },
     { label: "Contacto", href: "/contact" },
   ],
   legal: [
     { label: "Términos de Servicio", href: "/terms" },
     { label: "Política de Privacidad", href: "/privacy" },
-    { label: "Cookies", href: "/cookies" },
+    { label: "Política de Cookies", href: "/cookies" },
   ],
 };
 
 const SOCIAL_LINKS = [
-  { icon: Twitter, href: "https://twitter.com/firesend", label: "Twitter" },
   {
     icon: Instagram,
-    href: "https://instagram.com/firesend",
+    href: "https://www.instagram.com/fireforgerd?igsh=MWFkcXV5bWF3MWx6Yg%3D%3D&utm_source=qr",
     label: "Instagram",
   },
-  { icon: Github, href: "https://github.com/firesend", label: "GitHub" },
-  { icon: Mail, href: "mailto:hello@firesend.io", label: "Email" },
+  { icon: Mail, href: "mailto:Info@fireforgerd.com", label: "Email" },
+  {
+    icon: MessageCircle,
+    href: "https://wa.me/18498534067",
+    label: "WhatsApp",
+  },
 ];
 
 export function Footer() {
@@ -131,10 +133,18 @@ export function Footer() {
       <div className="border-t border-[#E8E6E3]/50">
         <div className="container mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-[#6B6966] flex items-center gap-1.5">
+            <p className="text-sm text-[#6B6966] flex items-center gap-1.5 flex-wrap justify-center md:justify-start">
               © {currentYear} FireSend. Hecho con{" "}
               <Heart size={14} className="text-[#FF4D00] fill-[#FF4D00]" /> en
-              España
+              República Dominicana por{" "}
+              <a
+                href="https://fireforgerd.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#FF4D00] hover:underline font-medium"
+              >
+                FireforgeRD
+              </a>
             </p>
             <div className="flex items-center gap-6">
               <span className="text-xs text-[#9B9895] flex items-center gap-2">

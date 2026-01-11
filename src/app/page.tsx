@@ -16,12 +16,13 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-[#F9F8F6]">
       {/* Navbar - Responsive */}
       <header className="px-4 sm:px-6 h-16 flex items-center justify-between border-b border-[#E8E6E3]/50 bg-white/70 backdrop-blur-xl sticky top-0 z-50">
-        <div className="flex items-center gap-2.5 font-bold text-xl text-[#1A1818]">
+        <Link href="/" className="flex items-center gap-2.5 font-bold text-xl text-[#1A1818]">
           <div className="h-9 w-9 bg-gradient-to-br from-[#FF4D00] to-[#FF7A3D] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#FF4D00]/20">
             <Flame size={18} fill="currentColor" />
           </div>
           <span className="hidden sm:inline">FireSend</span>
-        </div>
+          <span className="sm:hidden">FireSend</span>
+        </Link>
         <div className="flex items-center gap-2 sm:gap-4">
           <Link
             href="/login"

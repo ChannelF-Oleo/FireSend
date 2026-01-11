@@ -36,7 +36,7 @@ export function LegalLayout({
           <div className="h-9 w-9 bg-gradient-to-br from-[#FF4D00] to-[#FF7A3D] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#FF4D00]/20">
             <Flame size={18} fill="currentColor" />
           </div>
-          <span className="hidden sm:inline">FireSend</span>
+          <span>FireSend</span>
         </Link>
         <Link
           href="/"
